@@ -1,0 +1,1105 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Elixir 0.7.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-elixir">
+<span id="elixir-package"></span><h1>Elixir package<a class="headerlink" href="#module-elixir" title="Permalink to this headline">¶</a></h1>
+<p>A declarative layer on top of the <a class="reference external" href="http://www.sqlalchemy.org/">SQLAlchemy library</a>. It is a fairly thin wrapper, which provides
+the ability to create simple Python classes that map directly to relational
+database tables (this pattern is often referred to as the Active Record design
+pattern), providing many of the benefits of traditional databases
+without losing the convenience of Python objects.</p>
+<p>Elixir is intended to replace the ActiveMapper SQLAlchemy extension, and the
+TurboEntity project but does not intend to replace SQLAlchemy’s core features,
+and instead focuses on providing a simpler syntax for defining model objects
+when you do not need the full expressiveness of SQLAlchemy’s manual mapper
+definitions.</p>
+<div class="toctree-wrapper compound">
+<span id="document-elixir__fields"></span><div class="section" id="module-elixir.fields">
+<span id="elixir-fields"></span><h2>elixir.fields<a class="headerlink" href="#module-elixir.fields" title="Permalink to this headline">¶</a></h2>
+<p>This module provides support for defining the fields (columns) of your
+entities. Elixir currently supports two syntaxes to do so: the default
+<a class="reference internal" href="#attribute-based-syntax">Attribute-based syntax</a> as well as the <a class="reference internal" href="#has-field">has_field</a> DSL statement.</p>
+<div class="section" id="attribute-based-syntax">
+<h3>Attribute-based syntax<a class="headerlink" href="#attribute-based-syntax" title="Permalink to this headline">¶</a></h3>
+<p>Here is a quick example of how to use the object-oriented syntax.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">ssn</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">50</span><span class="p">),</span> <span class="n">unique</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">biography</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Text</span><span class="p">)</span>
+    <span class="n">join_date</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">)</span>
+    <span class="n">photo</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Binary</span><span class="p">,</span> <span class="n">deferred</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">_email</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span> <span class="n">colname</span><span class="o">=</span><span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="n">synonym</span><span class="o">=</span><span class="s1">&#39;email&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_email</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">email</span><span class="p">):</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">_email</span> <span class="o">=</span> <span class="n">email</span>
+    <span class="k">def</span> <span class="nf">_get_email</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+       <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_email</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">_get_email</span><span class="p">,</span> <span class="n">_set_email</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The Field class takes one mandatory argument, which is its type. Please refer
+to SQLAlchemy documentation for a list of <a class="reference external" href="http://www.sqlalchemy.org/docs/05/reference/sqlalchemy/types.html">types supported by SQLAlchemy</a>.</p>
+<p>Following that first mandatory argument, fields can take any number of
+optional keyword arguments. Please note that all the <strong>arguments</strong> that are
+<strong>not specifically processed by Elixir</strong>, as mentioned in the documentation
+below <strong>are passed on to the SQLAlchemy ``Column`` object</strong>. Please refer to
+the <a class="reference external" href="http://www.sqlalchemy.org/docs/05/reference/sqlalchemy/schema.html#sqlalchemy.schema.Column">SQLAlchemy Column object’s documentation</a> for more details about other
+supported keyword arguments.</p>
+<p>The following Elixir-specific arguments are supported:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="75%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Argument Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">required</span></code></td>
+<td>Specify whether or not this field can be set to None
+(left without a value). Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>, unless
+the field is a primary key.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">colname</span></code></td>
+<td>Specify a custom name for the column of this field. By
+default the column will have the same name as the
+attribute.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">deferred</span></code></td>
+<td>Specify whether this particular column should be
+fetched by default (along with the other columns) when
+an instance of the entity is fetched from the database
+or rather only later on when this particular column is
+first referenced. This can be useful when one wants to
+avoid loading a large text or binary field into memory
+when its not needed. Individual columns can be lazy
+loaded by themselves (by using <code class="docutils literal notranslate"><span class="pre">deferred=True</span></code>)
+or placed into groups that lazy-load together (by using
+<code class="docutils literal notranslate"><span class="pre">deferred</span></code> = <cite>“group_name”</cite>).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">synonym</span></code></td>
+<td>Specify a synonym name for this field. The field will
+also be usable under that name in keyword-based Query
+functions such as filter_by. The Synonym class (see the
+<cite>properties</cite> module) provides a similar functionality
+with an (arguably) nicer syntax, but a limited scope.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="has-field">
+<h3>has_field<a class="headerlink" href="#has-field" title="Permalink to this headline">¶</a></h3>
+<p>The <cite>has_field</cite> statement allows you to define fields one at a time.</p>
+<p>The first argument is the name of the field, the second is its type. Following
+these, any number of keyword arguments can be specified for additional
+behavior. The following arguments are supported:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="75%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Argument Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">through</span></code></td>
+<td>Specify a relation name to go through. This field will
+not exist as a column on the database but will be a
+property which automatically proxy values to the
+<code class="docutils literal notranslate"><span class="pre">attribute</span></code> attribute of the object pointed to by the
+relation. If the <code class="docutils literal notranslate"><span class="pre">attribute</span></code> argument is not present,
+the name of the current field will be used. In an
+has_field statement, you can only proxy through a
+belongs_to or an has_one relationship.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">attribute</span></code></td>
+<td>Name of the “endpoint” attribute to proxy to. This
+should only be used in combination with the <code class="docutils literal notranslate"><span class="pre">through</span></code>
+argument.</td>
+</tr>
+</tbody>
+</table>
+<p>Here is a quick example of how to use <code class="docutils literal notranslate"><span class="pre">has_field</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">has_field</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">has_field</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">String</span><span class="p">(</span><span class="mi">50</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<span id="document-elixir__options"></span><div class="section" id="module-elixir.options">
+<span id="elixir-options"></span><h2>elixir.options<a class="headerlink" href="#module-elixir.options" title="Permalink to this headline">¶</a></h2>
+<p>This module provides support for defining several options on your Elixir
+entities.  There are three different kinds of options that can be set
+up, and for this there are three different statements: <a class="reference internal" href="#using-options">using_options</a>,
+<a class="reference internal" href="#using-table-options">using_table_options</a> and <a class="reference internal" href="#using-mapper-options">using_mapper_options</a>.</p>
+<p>Alternatively, these options can be set on all Elixir entities by modifying
+the <cite>options_defaults</cite> dictionary before defining any entity.</p>
+<div class="section" id="using-options">
+<h3><cite>using_options</cite><a class="headerlink" href="#using-options" title="Permalink to this headline">¶</a></h3>
+<p>The ‘using_options’ DSL statement allows you to set up some additional
+behaviors on your model objects, including table names, ordering, and
+more.  To specify an option, simply supply the option as a keyword
+argument onto the statement, as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">64</span><span class="p">))</span>
+
+    <span class="n">using_options</span><span class="p">(</span><span class="n">shortnames</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">order_by</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The list of supported arguments are as follows:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="28%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">inheritance</span></code></td>
+<td>Specify the type of inheritance this entity must use.
+It can be one of <code class="docutils literal notranslate"><span class="pre">single</span></code>, <code class="docutils literal notranslate"><span class="pre">concrete</span></code> or
+<code class="docutils literal notranslate"><span class="pre">multi</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">single</span></code>.
+Note that polymorphic concrete inheritance is
+currently not implemented. See:
+<a class="reference external" href="http://www.sqlalchemy.org/docs/05/mappers.html">http://www.sqlalchemy.org/docs/05/mappers.html</a>
+#mapping-class-inheritance-hierarchies for an
+explanation of the different kinds of inheritances.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">abstract</span></code></td>
+<td>Set ‘abstract’=True to declare abstract entity.
+Abstract base classes are useful when you want to put
+some common information into a number of other
+entities. Abstract entity will not be used to create
+any database table. Instead, when it is used as a base
+class for other entity, its fields will be added to
+those of the child class.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">polymorphic</span></code></td>
+<td>Whether the inheritance should be polymorphic or not.
+Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>. The column used to store the
+type of each row is named “row_type” by default. You
+can change this by passing the desired name for the
+column to this argument.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">identity</span></code></td>
+<td>Specify a custom polymorphic identity. When using
+polymorphic inheritance, this value (usually a
+string) will represent this particular entity (class)
+. It will be used to differentiate it from other
+entities (classes) in your inheritance hierarchy when
+loading from the database instances of different
+entities in that hierarchy at the same time.
+This value will be stored by default in the
+“row_type” column of the entity’s table (see above).
+You can either provide a
+plain string or a callable. The callable will be
+given the entity (ie class) as argument and must
+return a value (usually a string) representing the
+polymorphic identity of that entity.
+By default, this value is automatically generated: it
+is the name of the entity lower-cased.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">metadata</span></code></td>
+<td>Specify a custom MetaData for this entity.
+By default, entities uses the global
+<code class="docutils literal notranslate"><span class="pre">elixir.metadata</span></code>.
+This option can also be set for all entities of a
+module by setting the <code class="docutils literal notranslate"><span class="pre">__metadata__</span></code> attribute of
+that module.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">autoload</span></code></td>
+<td>Automatically load column definitions from the
+existing database table.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tablename</span></code></td>
+<td>Specify a custom tablename. You can either provide a
+plain string or a callable. The callable will be
+given the entity (ie class) as argument and must
+return a string representing the name of the table
+for that entity. By default, the tablename is
+automatically generated: it is a concatenation of the
+full module-path to the entity and the entity (class)
+name itself. The result is lower-cased and separated
+by underscores (“_”), eg.: for an entity named
+“MyEntity” in the module “project1.model”, the
+generated table name will be
+“project1_model_myentity”.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">shortnames</span></code></td>
+<td>Specify whether or not the automatically generated
+table names include the full module-path
+to the entity. If <code class="docutils literal notranslate"><span class="pre">shortnames</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, only
+the entity name is used. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">auto_primarykey</span></code></td>
+<td>If given as string, it will represent the
+auto-primary-key’s column name.  If this option
+is True, it will allow auto-creation of a primary
+key if there’s no primary key defined for the
+corresponding entity.  If this option is False,
+it will disallow auto-creation of a primary key.
+Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">version_id_col</span></code></td>
+<td>If this option is True, it will create a version
+column automatically using the default name. If given
+as string, it will create the column using that name.
+This can be used to prevent concurrent modifications
+to the entity’s table rows (i.e. it will raise an
+exception if it happens). Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">order_by</span></code></td>
+<td>How to order select results. Either a string or a
+list of strings, composed of the field name,
+optionally lead by a minus (for descending order).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">session</span></code></td>
+<td>Specify a custom contextual session for this entity.
+By default, entities uses the global
+<code class="docutils literal notranslate"><span class="pre">elixir.session</span></code>.
+This option takes a <code class="docutils literal notranslate"><span class="pre">ScopedSession</span></code> object or
+<code class="docutils literal notranslate"><span class="pre">None</span></code>. In the later case your entity will be
+mapped using a non-contextual mapper which requires
+manual session management, as seen in pure SQLAlchemy.
+This option can also be set for all entities of a
+module by setting the <code class="docutils literal notranslate"><span class="pre">__session__</span></code> attribute of
+that module.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">allowcoloverride</span></code></td>
+<td>Specify whether it is allowed to override columns.
+By default, Elixir forbids you to add a column to an
+entity’s table which already exist in that table. If
+you set this option to <code class="docutils literal notranslate"><span class="pre">True</span></code> it will skip that
+check. Use with care as it is easy to shoot oneself
+in the foot when overriding columns.</td>
+</tr>
+</tbody>
+</table>
+<p>For examples, please refer to the examples and unit tests.</p>
+</div>
+<div class="section" id="using-table-options">
+<h3><cite>using_table_options</cite><a class="headerlink" href="#using-table-options" title="Permalink to this headline">¶</a></h3>
+<p>The ‘using_table_options’ DSL statement allows you to set up some
+additional options on your entity table. It is meant only to handle the
+options which are not supported directly by the ‘using_options’ statement.
+By opposition to the ‘using_options’ statement, these options are passed
+directly to the underlying SQLAlchemy Table object (both non-keyword arguments
+and keyword arguments) without any processing.</p>
+<p>For further information, please refer to the <a class="reference external" href="http://www.sqlalchemy.org/docs/05/reference/sqlalchemy/schema.html#sqlalchemy.schema.Table">SQLAlchemy table’s documentation</a>.</p>
+<p>You might also be interested in the section about <a class="reference external" href="http://www.sqlalchemy.org/docs/05/metadata.html#defining-constraints-and-indexes">constraints</a>.</p>
+</div>
+<div class="section" id="using-mapper-options">
+<h3><cite>using_mapper_options</cite><a class="headerlink" href="#using-mapper-options" title="Permalink to this headline">¶</a></h3>
+<p>The ‘using_mapper_options’ DSL statement allows you to set up some
+additional options on your entity mapper. It is meant only to handle the
+options which are not supported directly by the ‘using_options’ statement.
+By opposition to the ‘using_options’ statement, these options are passed
+directly to the underlying SQLAlchemy mapper (as keyword arguments)
+without any processing.</p>
+<p>For further information, please refer to the <a class="reference external" href="http://www.sqlalchemy.org/docs/05/reference/orm/mapping.html#sqlalchemy.orm.mapper">SQLAlchemy mapper
+function’s documentation</a>.</p>
+</div>
+<div class="section" id="using-options-defaults">
+<h3><cite>using_options_defaults</cite><a class="headerlink" href="#using-options-defaults" title="Permalink to this headline">¶</a></h3>
+<p>The ‘using_options_defaults’ DSL statement allows you to set up some
+default options on a custom base class. These will be used as the default value
+for options of all its subclasses. Note that any option not set within the
+using_options_defaults (nor specifically on a particular Entity) will use the
+global defaults, so you don’t have to provide a default value for all options,
+but only those you want to change. Please also note that this statement does
+not work on normal entities, and the normal using_options statement does not
+work on base classes (because normal options do not and should not propagate to
+the children classes).</p>
+</div>
+</div>
+<span id="document-elixir__properties"></span><div class="section" id="module-elixir.properties">
+<span id="elixir-properties"></span><h2>elixir.properties<a class="headerlink" href="#module-elixir.properties" title="Permalink to this headline">¶</a></h2>
+<p>This module provides support for defining properties on your entities. It both
+provides, the <cite>Property</cite> class which acts as a building block for common
+properties such as fields and relationships (for those, please consult the
+corresponding modules), but also provides some more specialized properties,
+such as <cite>ColumnProperty</cite> and <cite>Synonym</cite>. It also provides the GenericProperty
+class which allows you to wrap any SQLAlchemy property, and its DSL-syntax
+equivalent: <a class="reference internal" href="#has-property">has_property</a>.</p>
+<div class="section" id="has-property">
+<h3><cite>has_property</cite><a class="headerlink" href="#has-property" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">has_property</span></code> statement allows you to define properties which rely on
+their entity’s table (and columns) being defined before they can be declared
+themselves. The <cite>has_property</cite> statement takes two arguments: first the name of
+the property to be defined and second a function (often given as an anonymous
+lambda) taking one argument and returning the desired SQLAlchemy property. That
+function will be called whenever the entity table is completely defined, and
+will be given the .c attribute of the entity as argument (as a way to access
+the entity columns).</p>
+<p>Here is a quick example of how to use <code class="docutils literal notranslate"><span class="pre">has_property</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">OrderLine</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">has_field</span><span class="p">(</span><span class="s1">&#39;quantity&#39;</span><span class="p">,</span> <span class="n">Float</span><span class="p">)</span>
+    <span class="n">has_field</span><span class="p">(</span><span class="s1">&#39;unit_price&#39;</span><span class="p">,</span> <span class="n">Float</span><span class="p">)</span>
+    <span class="n">has_property</span><span class="p">(</span><span class="s1">&#39;price&#39;</span><span class="p">,</span>
+                 <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">column_property</span><span class="p">(</span>
+                     <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">quantity</span> <span class="o">*</span> <span class="n">c</span><span class="o">.</span><span class="n">unit_price</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;price&#39;</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<span id="document-elixir__relationships"></span><div class="section" id="module-elixir.relationships">
+<span id="elixir-relationships"></span><h2>elixir.relationships<a class="headerlink" href="#module-elixir.relationships" title="Permalink to this headline">¶</a></h2>
+<p>This module provides support for defining relationships between your Elixir
+entities.  Elixir currently supports two syntaxes to do so: the default
+<a class="reference internal" href="#attribute-based-syntax">Attribute-based syntax</a> which supports the following types of relationships:
+<a class="reference internal" href="#manytoone">ManyToOne</a>, <a class="reference internal" href="#onetomany">OneToMany</a>, <a class="reference internal" href="#onetoone">OneToOne</a> and <a class="reference internal" href="#manytomany">ManyToMany</a>, as well as a
+<a class="reference internal" href="#dsl-based-syntax">DSL-based syntax</a> which provides the following statements: <a class="reference internal" href="#belongs-to">belongs_to</a>,
+<a class="reference internal" href="#has-many">has_many</a>, <a class="reference internal" href="#has-one">has_one</a> and <a class="reference internal" href="#has-and-belongs-to-many">has_and_belongs_to_many</a>.</p>
+<div class="section" id="attribute-based-syntax">
+<h3>Attribute-based syntax<a class="headerlink" href="#attribute-based-syntax" title="Permalink to this headline">¶</a></h3>
+<p>The first argument to all these “normal” relationship classes is the name of
+the class (entity) you are relating to.</p>
+<p>Following that first mandatory argument, any number of additional keyword
+arguments can be specified for advanced behavior. See each relationship type
+for a list of their specific keyword arguments. At this point, we’ll just note
+that all the arguments that are not specifically processed by Elixir, as
+mentioned in the documentation below are passed on to the SQLAlchemy
+<code class="docutils literal notranslate"><span class="pre">relation</span></code> function. So, please refer to the <a class="reference external" href="http://www.sqlalchemy.org/docs/05/reference/orm/mapping.html#sqlalchemy.orm.relation">SQLAlchemy relation function’s
+documentation</a> for further detail about which
+keyword arguments are supported.</p>
+<p>You should keep in mind that the following
+keyword arguments are automatically generated by Elixir and should not be used
+unless you want to override the value provided by Elixir: <code class="docutils literal notranslate"><span class="pre">uselist</span></code>,
+<code class="docutils literal notranslate"><span class="pre">remote_side</span></code>, <code class="docutils literal notranslate"><span class="pre">secondary</span></code>, <code class="docutils literal notranslate"><span class="pre">primaryjoin</span></code> and <code class="docutils literal notranslate"><span class="pre">secondaryjoin</span></code>.</p>
+<p>Additionally, if you want a bidirectionnal relationship, you should define the
+inverse relationship on the other entity explicitly (as opposed to how
+SQLAlchemy’s backrefs are defined). In non-ambiguous situations, Elixir will
+match relationships together automatically. If there are several relationships
+of the same type between two entities, Elixir is not able to determine which
+relationship is the inverse of which, so you have to disambiguate the
+situation by giving the name of the inverse relationship in the <code class="docutils literal notranslate"><span class="pre">inverse</span></code>
+keyword argument.</p>
+<p>Here is a detailed explanation of each relation type:</p>
+<div class="section" id="manytoone">
+<h4><cite>ManyToOne</cite><a class="headerlink" href="#manytoone" title="Permalink to this headline">¶</a></h4>
+<p>Describes the child’s side of a parent-child relationship.  For example,
+a <cite>Pet</cite> object may belong to its owner, who is a <cite>Person</cite>.  This could be
+expressed like so:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Pet</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="n">ManyToOne</span><span class="p">(</span><span class="s1">&#39;Person&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Behind the scene, assuming the primary key of the <cite>Person</cite> entity is
+an integer column named <cite>id</cite>, the <code class="docutils literal notranslate"><span class="pre">ManyToOne</span></code> relationship will
+automatically add an integer column named <cite>owner_id</cite> to the entity, with a
+foreign key referencing the <cite>id</cite> column of the <cite>Person</cite> entity.</p>
+<p>In addition to the keyword arguments inherited from SQLAlchemy’s relation
+function, <code class="docutils literal notranslate"><span class="pre">ManyToOne</span></code> relationships accept the following optional arguments
+which will be directed to the created column:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">colname</span></code></td>
+<td>Specify a custom name for the foreign key column(s).
+This argument accepts either a single string or a
+list of strings. The number of strings passed must
+match the number of primary key columns of the target
+entity. If this argument is not used, the name of the
+column(s) is generated with the pattern
+defined in options.FKCOL_NAMEFORMAT, which is, by
+default: “%(relname)s_%(key)s”, where relname is the
+name of the ManyToOne relationship, and ‘key’ is the
+name (key) of the primary column in the target
+entity. That’s with, in the above Pet/owner example,
+the name of the column would be: “owner_id”.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">required</span></code></td>
+<td>Specify whether or not this field can be set to None
+(left without a value). Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>,
+unless the field is a primary key.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">primary_key</span></code></td>
+<td>Specify whether or not the column(s) created by this
+relationship should act as a primary_key.
+Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">column_kwargs</span></code></td>
+<td>A dictionary holding any other keyword argument you
+might want to pass to the Column.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">target_column</span></code></td>
+<td>Name (or list of names) of the target column(s).
+If this argument is not specified, the target entity
+primary key column(s) are used.</td>
+</tr>
+</tbody>
+</table>
+<p>The following optional arguments are also supported to customize the
+ForeignKeyConstraint that is created:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">use_alter</span></code></td>
+<td>If True, SQLAlchemy will add the constraint in a
+second SQL statement (as opposed to within the
+create table statement). This permits to define
+tables with a circular foreign key dependency
+between them.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">ondelete</span></code></td>
+<td>Value for the foreign key constraint ondelete clause.
+May be one of: <code class="docutils literal notranslate"><span class="pre">cascade</span></code>, <code class="docutils literal notranslate"><span class="pre">restrict</span></code>,
+<code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">null</span></code>, or <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">default</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">onupdate</span></code></td>
+<td>Value for the foreign key constraint onupdate clause.
+May be one of: <code class="docutils literal notranslate"><span class="pre">cascade</span></code>, <code class="docutils literal notranslate"><span class="pre">restrict</span></code>,
+<code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">null</span></code>, or <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">default</span></code>.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">constraint_kwargs</span></code></td>
+<td>A dictionary holding any other keyword argument you
+might want to pass to the Constraint.</td>
+</tr>
+</tbody>
+</table>
+<p>In some cases, you may want to declare the foreign key column explicitly,
+instead of letting it be generated automatically.  There are several reasons to
+that: it could be because you want to declare it with precise arguments and
+using column_kwargs makes your code ugly, or because the name of
+your column conflicts with the property name (in which case an error is
+thrown).  In those cases, you can use the <code class="docutils literal notranslate"><span class="pre">field</span></code> argument to specify an
+already-declared field to be used for the foreign key column.</p>
+<p>For example, for the Pet example above, if you want the database column
+(holding the foreign key) to be called ‘owner’, one should use the field
+parameter to specify the field manually.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Pet</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">owner_id</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">colname</span><span class="o">=</span><span class="s1">&#39;owner&#39;</span><span class="p">)</span>
+    <span class="n">owner</span> <span class="o">=</span> <span class="n">ManyToOne</span><span class="p">(</span><span class="s1">&#39;Person&#39;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="n">owner_id</span><span class="p">)</span>
+</pre></div>
+</div>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">field</span></code></td>
+<td>Specify the previously-declared field to be used for
+the foreign key column. Use of this parameter is
+mutually exclusive with the colname and column_kwargs
+arguments.</td>
+</tr>
+</tbody>
+</table>
+<p>Additionally, Elixir supports the <a class="reference internal" href="#belongs-to">belongs_to</a> statement as an alternative,
+DSL-based, syntax to define <a class="reference internal" href="#manytoone">ManyToOne</a> relationships.</p>
+</div>
+<div class="section" id="onetomany">
+<h4><cite>OneToMany</cite><a class="headerlink" href="#onetomany" title="Permalink to this headline">¶</a></h4>
+<p>Describes the parent’s side of a parent-child relationship when there can be
+several children.  For example, a <cite>Person</cite> object has many children, each of
+them being a <cite>Person</cite>. This could be expressed like so:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ManyToOne</span><span class="p">(</span><span class="s1">&#39;Person&#39;</span><span class="p">)</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="n">OneToMany</span><span class="p">(</span><span class="s1">&#39;Person&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that a <code class="docutils literal notranslate"><span class="pre">OneToMany</span></code> relationship <strong>cannot exist</strong> without a
+corresponding <code class="docutils literal notranslate"><span class="pre">ManyToOne</span></code> relationship in the other way. This is because the
+<code class="docutils literal notranslate"><span class="pre">OneToMany</span></code> relationship needs the foreign key created by the <code class="docutils literal notranslate"><span class="pre">ManyToOne</span></code>
+relationship.</p>
+<p>In addition to keyword arguments inherited from SQLAlchemy, <code class="docutils literal notranslate"><span class="pre">OneToMany</span></code>
+relationships accept the following optional (keyword) arguments:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="74%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">order_by</span></code></td>
+<td>Specify which field(s) should be used to sort the
+results given by accessing the relation field.
+Note that this sort order is only applied when loading
+objects from the database. Objects appended to the
+collection afterwards are not re-sorted in-memory on
+the fly.
+This argument accepts either a string or a list of
+strings, each corresponding to the name of a field in
+the target entity. These field names can optionally be
+prefixed by a minus (for descending order).</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">filter</span></code></td>
+<td>Specify a filter criterion (as a clause element) for
+this relationship. This criterion will be <code class="docutils literal notranslate"><span class="pre">and_</span></code> ed
+with the normal join criterion (primaryjoin) generated
+by Elixir for the relationship. For example:
+boston_addresses =
+OneToMany(‘Address’, filter=Address.city == ‘Boston’)</td>
+</tr>
+</tbody>
+</table>
+<p>Additionally, Elixir supports an alternate, DSL-based, syntax to define
+<a class="reference internal" href="#onetomany">OneToMany</a> relationships, with the <a class="reference internal" href="#has-many">has_many</a> statement.</p>
+</div>
+<div class="section" id="onetoone">
+<h4><cite>OneToOne</cite><a class="headerlink" href="#onetoone" title="Permalink to this headline">¶</a></h4>
+<p>Describes the parent’s side of a parent-child relationship when there is only
+one child.  For example, a <cite>Car</cite> object has one gear stick, which is
+represented as a <cite>GearStick</cite> object. This could be expressed like so:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Car</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">gear_stick</span> <span class="o">=</span> <span class="n">OneToOne</span><span class="p">(</span><span class="s1">&#39;GearStick&#39;</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="s1">&#39;car&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">GearStick</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">car</span> <span class="o">=</span> <span class="n">ManyToOne</span><span class="p">(</span><span class="s1">&#39;Car&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that a <code class="docutils literal notranslate"><span class="pre">OneToOne</span></code> relationship <strong>cannot exist</strong> without a corresponding
+<code class="docutils literal notranslate"><span class="pre">ManyToOne</span></code> relationship in the other way. This is because the <code class="docutils literal notranslate"><span class="pre">OneToOne</span></code>
+relationship needs the foreign_key created by the <code class="docutils literal notranslate"><span class="pre">ManyToOne</span></code> relationship.</p>
+<p>Additionally, Elixir supports an alternate, DSL-based, syntax to define
+<a class="reference internal" href="#onetoone">OneToOne</a> relationships, with the <a class="reference internal" href="#has-one">has_one</a> statement.</p>
+</div>
+<div class="section" id="manytomany">
+<h4><cite>ManyToMany</cite><a class="headerlink" href="#manytomany" title="Permalink to this headline">¶</a></h4>
+<p>Describes a relationship in which one kind of entity can be related to several
+objects of the other kind but the objects of that other kind can be related to
+several objects of the first kind.  For example, an <cite>Article</cite> can have several
+tags, but the same <cite>Tag</cite> can be used on several articles.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Article</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">ManyToMany</span><span class="p">(</span><span class="s1">&#39;Tag&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Tag</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">articles</span> <span class="o">=</span> <span class="n">ManyToMany</span><span class="p">(</span><span class="s1">&#39;Article&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Behind the scene, the <code class="docutils literal notranslate"><span class="pre">ManyToMany</span></code> relationship will automatically create an
+intermediate table to host its data.</p>
+<p>Note that you don’t necessarily need to define the inverse relationship.  In
+our example, even though we want tags to be usable on several articles, we
+might not be interested in which articles correspond to a particular tag.  In
+that case, we could have omitted the <cite>Tag</cite> side of the relationship.</p>
+<p>If your <code class="docutils literal notranslate"><span class="pre">ManyToMany</span></code> relationship is self-referencial, the entity
+containing it is autoloaded (and you don’t intend to specify both the
+primaryjoin and secondaryjoin arguments manually), you must specify at least
+one of either the <code class="docutils literal notranslate"><span class="pre">remote_colname</span></code> or <code class="docutils literal notranslate"><span class="pre">local_colname</span></code> argument.</p>
+<p>In addition to keyword arguments inherited from SQLAlchemy, <code class="docutils literal notranslate"><span class="pre">ManyToMany</span></code>
+relationships accept the following optional (keyword) arguments:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="27%" />
+<col width="1%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option Name</th>
+<th class="head" colspan="2">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">tablename</span></code></td>
+<td colspan="2">Specify a custom name for the intermediary table. This
+can be used both when the tables needs to be created
+and when the table is autoloaded/reflected from the
+database. If this argument is not used, a name will be
+automatically generated by Elixir depending on the name
+of the tables of the two entities of the relationship,
+the name of the relationship, and, if present, the name
+of its inverse. Even though this argument is optional,
+it is wise to use it if you are not sure what are the
+exact consequence of using a generated table name.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">schema</span></code></td>
+<td colspan="2">Specify a custom schema for the intermediate table.
+This can be used both when the tables needs to
+be created and when the table is autoloaded/reflected
+from the database.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">remote_colname</span></code></td>
+<td colspan="2">A string or list of strings specifying the names of
+the column(s) in the intermediary table which
+reference the “remote”/target entity’s table.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">local_colname</span></code></td>
+<td colspan="2">A string or list of strings specifying the names of
+the column(s) in the intermediary table which
+reference the “local”/current entity’s table.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">table</span></code></td>
+<td colspan="2">Use a manually created table. If this argument is
+used, Elixir will not generate a table for this
+relationship, and use the one given instead. This
+argument only accepts SQLAlchemy’s Table objects.</td>
+</tr>
+<tr class="row-odd"><td colspan="3"><dl class="first last docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">order_by</span></code>       | Specify which field(s) should be used to sort the</dt>
+<dd><div class="first last line-block">
+<div class="line">results given by accessing the relation field.</div>
+<div class="line">Note that this sort order is only applied when loading</div>
+<div class="line">objects from the database. Objects appended to the</div>
+<div class="line">collection afterwards are not re-sorted in-memory on</div>
+<div class="line">the fly.</div>
+<div class="line">This argument accepts either a string or a list of</div>
+<div class="line">strings, each corresponding to the name of a field in</div>
+<div class="line">the target entity. These field names can optionally be</div>
+<div class="line">prefixed by a minus (for descending order).</div>
+</div>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-even"><td colspan="3"><dl class="first last docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">ondelete</span></code>       | Value for the foreign key constraint ondelete clause.</dt>
+<dd><div class="first last line-block">
+<div class="line">May be one of: <code class="docutils literal notranslate"><span class="pre">cascade</span></code>, <code class="docutils literal notranslate"><span class="pre">restrict</span></code>,</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">null</span></code>, or <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">default</span></code>.</div>
+</div>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">onupdate</span></code></td>
+<td colspan="2">Value for the foreign key constraint onupdate clause.
+May be one of: <code class="docutils literal notranslate"><span class="pre">cascade</span></code>, <code class="docutils literal notranslate"><span class="pre">restrict</span></code>,
+<code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">null</span></code>, or <code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">default</span></code>.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">table_kwargs</span></code></td>
+<td colspan="2">A dictionary holding any other keyword argument you
+might want to pass to the underlying Table object.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="dsl-based-syntax">
+<h3>DSL-based syntax<a class="headerlink" href="#dsl-based-syntax" title="Permalink to this headline">¶</a></h3>
+<p>The following DSL statements provide an alternative way to define relationships
+between your entities. The first argument to all those statements is the name
+of the relationship, the second is the ‘kind’ of object you are relating to
+(it is usually given using the <code class="docutils literal notranslate"><span class="pre">of_kind</span></code> keyword).</p>
+<div class="section" id="belongs-to">
+<h4><cite>belongs_to</cite><a class="headerlink" href="#belongs-to" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">belongs_to</span></code> statement is the DSL syntax equivalent to the <a class="reference internal" href="#manytoone">ManyToOne</a>
+relationship. As such, it supports all the same arguments as <a class="reference internal" href="#manytoone">ManyToOne</a>
+relationships.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Pet</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">belongs_to</span><span class="p">(</span><span class="s1">&#39;feeder&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Person&#39;</span><span class="p">)</span>
+    <span class="n">belongs_to</span><span class="p">(</span><span class="s1">&#39;owner&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Person&#39;</span><span class="p">,</span> <span class="n">colname</span><span class="o">=</span><span class="s2">&quot;owner_id&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="has-many">
+<h4><cite>has_many</cite><a class="headerlink" href="#has-many" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">has_many</span></code> statement is the DSL syntax equivalent to the <a class="reference internal" href="#onetomany">OneToMany</a>
+relationship. As such, it supports all the same arguments as <a class="reference internal" href="#onetomany">OneToMany</a>
+relationships.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">belongs_to</span><span class="p">(</span><span class="s1">&#39;parent&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Person&#39;</span><span class="p">)</span>
+    <span class="n">has_many</span><span class="p">(</span><span class="s1">&#39;children&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Person&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>There is also an alternate form of the <code class="docutils literal notranslate"><span class="pre">has_many</span></code> relationship that takes
+only two keyword arguments: <code class="docutils literal notranslate"><span class="pre">through</span></code> and <code class="docutils literal notranslate"><span class="pre">via</span></code> in order to encourage a
+richer form of many-to-many relationship that is an alternative to the
+<code class="docutils literal notranslate"><span class="pre">has_and_belongs_to_many</span></code> statement.  Here is an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">has_field</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">)</span>
+    <span class="n">has_many</span><span class="p">(</span><span class="s1">&#39;assignments&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Assignment&#39;</span><span class="p">)</span>
+    <span class="n">has_many</span><span class="p">(</span><span class="s1">&#39;projects&#39;</span><span class="p">,</span> <span class="n">through</span><span class="o">=</span><span class="s1">&#39;assignments&#39;</span><span class="p">,</span> <span class="n">via</span><span class="o">=</span><span class="s1">&#39;project&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Assignment</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">has_field</span><span class="p">(</span><span class="s1">&#39;start_date&#39;</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">)</span>
+    <span class="n">belongs_to</span><span class="p">(</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Person&#39;</span><span class="p">)</span>
+    <span class="n">belongs_to</span><span class="p">(</span><span class="s1">&#39;project&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Project&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Project</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">has_field</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="n">Unicode</span><span class="p">)</span>
+    <span class="n">has_many</span><span class="p">(</span><span class="s1">&#39;assignments&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Assignment&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the above example, a <cite>Person</cite> has many <cite>projects</cite> through the <cite>Assignment</cite>
+relationship object, via a <cite>project</cite> attribute.</p>
+</div>
+<div class="section" id="has-one">
+<h4><cite>has_one</cite><a class="headerlink" href="#has-one" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">has_one</span></code> statement is the DSL syntax equivalent to the <a class="reference internal" href="#onetoone">OneToOne</a>
+relationship. As such, it supports all the same arguments as <a class="reference internal" href="#onetoone">OneToOne</a>
+relationships.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Car</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">has_one</span><span class="p">(</span><span class="s1">&#39;gear_stick&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;GearStick&#39;</span><span class="p">,</span> <span class="n">inverse</span><span class="o">=</span><span class="s1">&#39;car&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">GearStick</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">belongs_to</span><span class="p">(</span><span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Car&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="has-and-belongs-to-many">
+<h4><cite>has_and_belongs_to_many</cite><a class="headerlink" href="#has-and-belongs-to-many" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">has_and_belongs_to_many</span></code> statement is the DSL syntax equivalent to the
+<a class="reference internal" href="#manytomany">ManyToMany</a> relationship. As such, it supports all the same arguments as
+<a class="reference internal" href="#manytomany">ManyToMany</a> relationships.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Article</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">has_and_belongs_to_many</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Tag&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Tag</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">has_and_belongs_to_many</span><span class="p">(</span><span class="s1">&#39;articles&#39;</span><span class="p">,</span> <span class="n">of_kind</span><span class="o">=</span><span class="s1">&#39;Article&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="toctree-wrapper compound">
+<span id="document-elixir__ext__associable"></span><div class="section" id="module-elixir.ext.associable">
+<span id="elixir-ext-associable"></span><h2>elixir.ext.associable<a class="headerlink" href="#module-elixir.ext.associable" title="Permalink to this headline">¶</a></h2>
+<p>Associable Elixir Statement Generator</p>
+<div class="section" id="associable">
+<h3>Associable<a class="headerlink" href="#associable" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="about-polymorphic-associations">
+<h4>About Polymorphic Associations<a class="headerlink" href="#about-polymorphic-associations" title="Permalink to this headline">¶</a></h4>
+<p>A frequent pattern in database schemas is the has_and_belongs_to_many, or a
+many-to-many table. Quite often multiple tables will refer to a single one
+creating quite a few many-to-many intermediate tables.</p>
+<p>Polymorphic associations lower the amount of many-to-many tables by setting up
+a table that allows relations to any other table in the database, and relates
+it to the associable table. In some implementations, this layout does not
+enforce referential integrity with database foreign key constraints, this
+implementation uses an additional many-to-many table with foreign key
+constraints to avoid this problem.</p>
+</div>
+<div class="section" id="elixir-statement-generator-for-polymorphic-associations">
+<h4>Elixir Statement Generator for Polymorphic Associations<a class="headerlink" href="#elixir-statement-generator-for-polymorphic-associations" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">associable</span></code> function generates the intermediary tables for an Elixir
+entity that should be associable with other Elixir entities and returns an
+Elixir Statement for use with them. This automates the process of creating the
+polymorphic association tables and ensuring their referential integrity.</p>
+<p>Matching select_XXX and select_by_XXX are also added to the associated entity
+which allow queries to be run for the associated objects.</p>
+<p>Example usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Tag</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Unicode</span><span class="p">)</span>
+
+<span class="n">acts_as_taggable</span> <span class="o">=</span> <span class="n">associable</span><span class="p">(</span><span class="n">Tag</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Unicode</span><span class="p">)</span>
+    <span class="n">acts_as_taggable</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Article</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Unicode</span><span class="p">)</span>
+    <span class="n">acts_as_taggable</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or if one of the entities being associated should only have a single member of
+the associated table:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Address</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">street</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">130</span><span class="p">))</span>
+    <span class="n">city</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+
+<span class="n">is_addressable</span> <span class="o">=</span> <span class="n">associable</span><span class="p">(</span><span class="n">Address</span><span class="p">,</span> <span class="s1">&#39;addresses&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Unicode</span><span class="p">)</span>
+    <span class="n">orders</span> <span class="o">=</span> <span class="n">OneToMany</span><span class="p">(</span><span class="s1">&#39;Order&#39;</span><span class="p">)</span>
+    <span class="n">is_addressable</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">Order</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">order_num</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">item_count</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+    <span class="n">person</span> <span class="o">=</span> <span class="n">ManyToOne</span><span class="p">(</span><span class="s1">&#39;Person&#39;</span><span class="p">)</span>
+    <span class="n">is_addressable</span><span class="p">(</span><span class="s1">&#39;address&#39;</span><span class="p">,</span> <span class="n">uselist</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="n">home</span> <span class="o">=</span> <span class="n">Address</span><span class="p">(</span><span class="n">street</span><span class="o">=</span><span class="s1">&#39;123 Elm St.&#39;</span><span class="p">,</span> <span class="n">city</span><span class="o">=</span><span class="s1">&#39;Spooksville&#39;</span><span class="p">)</span>
+<span class="n">user</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Jane Doe&#39;</span><span class="p">)</span>
+<span class="n">user</span><span class="o">.</span><span class="n">addresses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">home</span><span class="p">)</span>
+
+<span class="n">neworder</span> <span class="o">=</span> <span class="n">Order</span><span class="p">(</span><span class="n">item_count</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">neworder</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">home</span>
+<span class="n">user</span><span class="o">.</span><span class="n">orders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neworder</span><span class="p">)</span>
+
+<span class="c1"># Queries using the added helpers</span>
+<span class="n">Person</span><span class="o">.</span><span class="n">select_by_addresses</span><span class="p">(</span><span class="n">city</span><span class="o">=</span><span class="s1">&#39;Cupertino&#39;</span><span class="p">)</span>
+<span class="n">Person</span><span class="o">.</span><span class="n">select_addresses</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Address</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">street</span><span class="o">==</span><span class="s1">&#39;132 Elm St&#39;</span><span class="p">,</span>
+                             <span class="n">Address</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">city</span><span class="o">==</span><span class="s1">&#39;Smallville&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="statement-options">
+<h4>Statement Options<a class="headerlink" href="#statement-options" title="Permalink to this headline">¶</a></h4>
+<p>The generated Elixir Statement has several options available:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">name</span></code></td>
+<td>Specify a custom name for the Entity attribute. This is
+used to declare the attribute used to access the associated
+table values. Otherwise, the name will use the plural_name
+provided to the associable call.</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">uselist</span></code></td>
+<td>Whether or not the associated table should be represented
+as a list, or a single property. It should be set to False
+when the entity should only have a single associated
+entity. Defaults to True.</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">lazy</span></code></td>
+<td>Determines eager loading of the associated entity objects.
+Defaults to False, to indicate that they should not be
+lazily loaded.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<span id="document-elixir__ext__encrypted"></span><div class="section" id="module-elixir.ext.encrypted">
+<span id="elixir-ext-encrypted"></span><h2>elixir.ext.encrypted<a class="headerlink" href="#module-elixir.ext.encrypted" title="Permalink to this headline">¶</a></h2>
+<p>An encryption plugin for Elixir utilizing the excellent PyCrypto library, which
+can be downloaded here: <a class="reference external" href="http://www.amk.ca/python/code/crypto">http://www.amk.ca/python/code/crypto</a></p>
+<p>Values for columns that are specified to be encrypted will be transparently
+encrypted and safely encoded for storage in a unicode column using the powerful
+and secure Blowfish Cipher using a specified “secret” which can be passed into
+the plugin at class declaration time.</p>
+<p>Example usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">elixir</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">elixir.ext.encrypted</span> <span class="kn">import</span> <span class="n">acts_as_encrypted</span>
+
+<span class="k">class</span> <span class="nc">Person</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Unicode</span><span class="p">)</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Unicode</span><span class="p">)</span>
+    <span class="n">ssn</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Unicode</span><span class="p">)</span>
+    <span class="n">acts_as_encrypted</span><span class="p">(</span><span class="n">for_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">,</span> <span class="s1">&#39;ssn&#39;</span><span class="p">],</span>
+                      <span class="n">with_secret</span><span class="o">=</span><span class="s1">&#39;secret&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The above Person entity will automatically encrypt and decrypt the password and
+ssn columns on save, update, and load.  Different secrets can be specified on
+an entity by entity basis, for added security.</p>
+<p><strong>Important note</strong>: instance attributes are encrypted in-place. This means that
+if one of the encrypted attributes of an instance is accessed after the
+instance has been flushed to the database (and thus encrypted), the value for
+that attribute will be crypted in the in-memory object in addition to the
+database row.</p>
+</div>
+<span id="document-elixir__ext__perform_ddl"></span><div class="section" id="module-elixir.ext.perform_ddl">
+<span id="elixir-ext-perform-ddl"></span><h2>elixir.ext.perform_ddl<a class="headerlink" href="#module-elixir.ext.perform_ddl" title="Permalink to this headline">¶</a></h2>
+<p>DDL statements for Elixir.</p>
+<p>Entities having the perform_ddl statement, will automatically execute the
+given DDL statement, at the given moment: ether before or after the table
+creation in SQL.</p>
+<p>The ‘when’ argument can be either ‘before-create’ or ‘after-create’.
+The ‘statement’ argument can be one of:</p>
+<ul class="simple">
+<li>a single string statement</li>
+<li>a list of string statements, in which case, each of them will be executed
+in turn.</li>
+<li>a callable which should take no argument and return either a single string
+or a list of strings.</li>
+</ul>
+<p>In each string statement, you may use the special ‘%(fullname)s’ construct,
+that will be replaced with the real table name including schema, if unknown
+to you. Also, self explained ‘%(table)s’ and ‘%(schema)s’ may be used here.</p>
+<p>You would use this extension to handle non elixir sql statemts, like triggers
+etc.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Movie</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+
+    <span class="n">perform_ddl</span><span class="p">(</span><span class="s1">&#39;after-create&#39;</span><span class="p">,</span>
+                <span class="s2">&quot;insert into </span><span class="si">%(fullname)s</span><span class="s2"> values (&#39;Alien&#39;, 1979)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>preload_data is a more specific statement meant to preload data in your
+entity table from a list of tuples (of fields values for each row).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Movie</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Unicode</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+
+    <span class="n">preload_data</span><span class="p">((</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">),</span>
+                 <span class="p">[(</span><span class="sa">u</span><span class="s1">&#39;Alien&#39;</span><span class="p">,</span> <span class="mi">1979</span><span class="p">),</span> <span class="p">(</span><span class="sa">u</span><span class="s1">&#39;Star Wars&#39;</span><span class="p">,</span> <span class="mi">1977</span><span class="p">)])</span>
+    <span class="n">preload_data</span><span class="p">((</span><span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">),</span>
+                 <span class="p">[(</span><span class="mi">1982</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Blade Runner&#39;</span><span class="p">)])</span>
+    <span class="n">preload_data</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[(</span><span class="sa">u</span><span class="s1">&#39;Batman&#39;</span><span class="p">,</span> <span class="mi">1966</span><span class="p">)])</span>
+</pre></div>
+</div>
+</div>
+<span id="document-elixir__ext__versioned"></span><div class="section" id="module-elixir.ext.versioned">
+<span id="elixir-ext-versioned"></span><h2>elixir.ext.versioned<a class="headerlink" href="#module-elixir.ext.versioned" title="Permalink to this headline">¶</a></h2>
+<p>A versioning plugin for Elixir.</p>
+<p>Entities that are marked as versioned with the <cite>acts_as_versioned</cite> statement
+will automatically have a history table created and a timestamp and version
+column added to their tables. In addition, versioned entities are provided
+with four new methods: revert, revert_to, compare_with and get_as_of, and one
+new attribute: versions.  Entities with compound primary keys are supported.</p>
+<p>The <cite>versions</cite> attribute will contain a list of previous versions of the
+instance, in increasing version number order.</p>
+<p>The <cite>get_as_of</cite> method will retrieve a previous version of the instance “as of”
+a specified datetime. If the current version is the most recent, it will be
+returned.</p>
+<p>The <cite>revert</cite> method will rollback the current instance to its previous version,
+if possible. Once reverted, the current instance will be expired from the
+session, and you will need to fetch it again to retrieve the now reverted
+instance.</p>
+<p>The <cite>revert_to</cite> method will rollback the current instance to the specified
+version number, if possibe. Once reverted, the current instance will be expired
+from the session, and you will need to fetch it again to retrieve the now
+reverted instance.</p>
+<p>The <cite>compare_with</cite> method will compare the instance with a previous version. A
+dictionary will be returned with each field difference as an element in the
+dictionary where the key is the field name and the value is a tuple of the
+format (current_value, version_value). Version instances also have a
+<cite>compare_with</cite> method so that two versions can be compared.</p>
+<p>Also included in the module is a <cite>after_revert</cite> decorator that can be used to
+decorate methods on the versioned entity that will be called following that
+instance being reverted.</p>
+<p>The acts_as_versioned statement also accepts an optional <cite>ignore</cite> argument
+that consists of a list of strings, specifying names of fields.  Changes in
+those fields will not result in a version increment.  In addition, you can
+pass in an optional <cite>check_concurrent</cite> argument, which will use SQLAlchemy’s
+built-in optimistic concurrency mechanisms.</p>
+<p>Note that relationships that are stored in mapping tables will not be included
+as part of the versioning process, and will need to be handled manually. Only
+values within the entity’s main table will be versioned into the history table.</p>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html#document-index">Table Of Contents</a></h3>
+  <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-elixir__fields">elixir.fields</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#attribute-based-syntax">Attribute-based syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#has-field">has_field</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-elixir__options">elixir.options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#using-options"><cite>using_options</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#using-table-options"><cite>using_table_options</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#using-mapper-options"><cite>using_mapper_options</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#using-options-defaults"><cite>using_options_defaults</cite></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-elixir__properties">elixir.properties</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#has-property"><cite>has_property</cite></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-elixir__relationships">elixir.relationships</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#attribute-based-syntax">Attribute-based syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#dsl-based-syntax">DSL-based syntax</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Extensions:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-elixir__ext__associable">elixir.ext.associable</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#associable">Associable</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-elixir__ext__encrypted">elixir.ext.encrypted</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-elixir__ext__perform_ddl">elixir.ext.perform_ddl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#document-elixir__ext__versioned">elixir.ext.versioned</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html#document-index">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Daniel Haus, Gaëtan de Menten, Jonathan LaCour.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
